@@ -12,8 +12,7 @@ mpnn.eval()
 test_path = r'data/train.parquet'
 smiles_column = 'molecule_smiles'
 df_test = pd.read_parquet(test_path)
-df_test = df_test.sample(n=100, random_state=1)
-several_id_lists = np.array_split(df_test.to_numpy(), 3)
+several_id_lists = np.array_split(df_test.to_numpy(), 40)
 
 def encode(smis):
     test_data = [data.MoleculeDatapoint.from_smi(smi) for smi in smis]
@@ -44,33 +43,25 @@ def replace_prot(prot_col):
 
 def to_l_space(df):
     id_1 = df[:, 0][0]
-    print(id_1)
     id_last = df[:, 0][-1]
-    print(id_last)
 
     smis = df[:, 4]
-    print(smis[0])
     mol_space = encode(smis)
-    print(mol_space[0])
 
     prot_col = df[:, 5]
-    print(prot_col[0])
     prot_space = replace_prot(prot_col)
-    print(prot_space[0])
 
     fin_data = pd.DataFrame(mol_space.numpy())
     fin_data['protein_name'] = prot_space
     fin_data['target'] = df[:, 6]
-    print(fin_data[:5])
+    fin_data['id'] = df[:, 0]
     fin_data.to_parquet(f'data/lspace/ls_{id_1}_{id_last}.parquet')
 
-for i in several_id_lists:
-    to_l_space(i)
 
-# func_out = Parallel(n_jobs=-1)(
-#     [
-#         delayed(to_l_space)(
-#             length
-#         ) for length in several_id_lists
-#     ]
-# )
+func_out = Parallel(n_jobs=-1)(
+    [
+        delayed(to_l_space)(
+            mol_list
+        ) for mol_list in several_id_lists
+    ]
+)
