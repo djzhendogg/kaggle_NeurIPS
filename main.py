@@ -13,7 +13,7 @@ test_path = r'data/train.parquet'
 smiles_column = 'molecule_smiles'
 df_test = pd.read_parquet(test_path)
 df_test = df_test.sample(n=100, random_state=1)
-several_id_lists = np.array_split(df_test.to_numpy(), 40)
+several_id_lists = np.array_split(df_test.to_numpy(), 3)
 
 def encode(smis):
     test_data = [data.MoleculeDatapoint.from_smi(smi) for smi in smis]
@@ -63,7 +63,6 @@ def to_l_space(df):
     print(fin_data.iloc[0])
     df.to_parquet(f'data/lspace/ls_{id_1}_{id_last}.parquet')
 
-print(several_id_lists.shape)
 for i in several_id_lists:
     to_l_space(i)
 
