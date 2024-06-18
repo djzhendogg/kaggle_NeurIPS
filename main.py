@@ -60,8 +60,9 @@ def to_l_space(df):
 
     fin_data = pd.DataFrame(mol_space.numpy())
     fin_data['protein_name'] = prot_space
-    print(fin_data.iloc[0])
-    df.to_parquet(f'data/lspace/ls_{id_1}_{id_last}.parquet')
+    fin_data['target'] = df[:, 6]
+    print(fin_data[:5])
+    fin_data.to_parquet(f'data/lspace/ls_{id_1}_{id_last}.parquet')
 
 for i in several_id_lists:
     to_l_space(i)
