@@ -12,6 +12,7 @@ mpnn.eval()
 test_path = r'data/train.parquet'
 smiles_column = 'molecule_smiles'
 df_test = pd.read_parquet(test_path)
+df_test = df_test[0:100000]
 several_id_lists = np.array_split(df_test.to_numpy(), 40)
 
 def encode(smis):
@@ -42,26 +43,36 @@ def replace_prot(prot_col):
     return labeled
 
 def to_l_space(df):
+    fin_df = pd.DataFrame()
     id_1 = df[:, 0][0]
     id_last = df[:, 0][-1]
+    print(df.shape)
+    chancks = np.array_split(df, 100)
+    print(len(chancks))
+    for chank in chancks:
+        smis = chank[:, 4]
+        mol_space = encode(smis)
 
-    smis = df[:, 4]
-    mol_space = encode(smis)
+        prot_col = chank[:, 5]
+        prot_space = replace_prot(prot_col)
 
-    prot_col = df[:, 5]
-    prot_space = replace_prot(prot_col)
+        fin_data = pd.DataFrame(mol_space.numpy())
+        fin_data['protein_name'] = prot_space
+        fin_data['target'] = chank[:, 6]
+        fin_data['id'] = chank[:, 0]
+        print(fin_data[:5])
+        fin_df = pd.concat([fin_df, fin_data])
+        print(fin_data.shape)
+        print(fin_df.shape)
 
-    fin_data = pd.DataFrame(mol_space.numpy())
-    fin_data['protein_name'] = prot_space
-    fin_data['target'] = df[:, 6]
-    fin_data['id'] = df[:, 0]
-    fin_data.to_parquet(f'data/lspace/ls_{id_1}_{id_last}.parquet')
+    fin_df.to_parquet(f'data/lspace/ls_{id_1}_{id_last}.parquet')
 
-
-func_out = Parallel(n_jobs=-1)(
-    [
-        delayed(to_l_space)(
-            mol_list
-        ) for mol_list in several_id_lists
-    ]
-)
+for mol_list in several_id_lists:
+    to_l_space(mol_list)
+# func_out = Parallel(n_jobs=-1)(
+#     [
+#         delayed(to_l_space)(
+#             mol_list
+#         ) for mol_list in several_id_lists
+#     ]
+# )
