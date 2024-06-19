@@ -13,7 +13,7 @@ test_path = r'data/train.parquet'
 smiles_column = 'molecule_smiles'
 df_test = pd.read_parquet(test_path)
 df_test.drop_duplicates(subset=['molecule_smiles'], inplace=True)
-several_id_lists = np.array_split(df_test.to_numpy(), 40)
+several_id_lists = np.array_split(df_test.to_numpy(), 100)
 
 def encode(smis):
     test_data = [data.MoleculeDatapoint.from_smi(smi) for smi in smis]
@@ -46,11 +46,14 @@ def to_l_space(df):
     fin_df = pd.DataFrame()
     id_1 = df[:, 0][0]
     id_last = df[:, 0][-1]
-    chancks = np.array_split(df, 100)
+    print(f"start {id_1} {id_last}")
+    chancks = np.array_split(df, 1000)
+    n = 0
     for chank in chancks:
+        n += 1
         smis = chank[:, 4]
         mol_space = encode(smis)
-
+        del smis
         prot_col = chank[:, 5]
         prot_space = replace_prot(prot_col)
 
@@ -59,7 +62,10 @@ def to_l_space(df):
         fin_data['target'] = chank[:, 6]
         fin_data['id'] = chank[:, 0]
         fin_df = pd.concat([fin_df, fin_data])
+        del fin_data
+        print(f"append {n}")
 
+    print(f"saving {id_1} {id_last}")
     fin_df.to_parquet(f'data/lspace/ls_{id_1}_{id_last}.parquet')
 
 # for mol_list in several_id_lists:
