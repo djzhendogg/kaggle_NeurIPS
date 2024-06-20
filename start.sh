@@ -1,2 +1,2 @@
 #!/bin/sh
-python3 main.py > log.txt
+python3 splitdata.py > log.txt
