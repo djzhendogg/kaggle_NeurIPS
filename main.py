@@ -1,7 +1,7 @@
 import pandas as pd
 import torch
 import numpy as np
-from joblib import Parallel, delayed
+# from joblib import Parallel, delayed
 
 from chemprop import data, featurizers, models
 
@@ -17,7 +17,8 @@ print(f"drop_duplicates start")
 df_test.drop_duplicates(subset=['molecule_smiles'], inplace=True)
 print(f"drop_duplicates done")
 print(f"split start")
-several_id_lists = np.array_split(df_test.to_numpy(), 100)
+df_test = df_test[0:100000]
+several_id_lists = np.array_split(df_test.to_numpy(), 40)
 print(f"split done")
 
 
@@ -77,13 +78,13 @@ def to_l_space(df):
     fin_df.to_parquet(f'data/lspace/ls_{id_1}_{id_last}.parquet')
 
 
-# for mol_list in several_id_lists:
-#     to_l_space(mol_list)
-print(f"func start")
-func_out = Parallel(n_jobs=48)(
-    [
-        delayed(to_l_space)(
-            mol_list
-        ) for mol_list in several_id_lists
-    ]
-)
+for mol_list in several_id_lists:
+    to_l_space(mol_list)
+# print(f"func start")
+# func_out = Parallel(n_jobs=48)(
+#     [
+#         delayed(to_l_space)(
+#             mol_list
+#         ) for mol_list in several_id_lists
+#     ]
+# )
