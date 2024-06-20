@@ -8,12 +8,18 @@ from chemprop import data, featurizers, models
 checkpoint_path = r'encoder/example_model_v2_regression_mol.ckpt'
 mpnn = models.MPNN.load_from_checkpoint(checkpoint_path)
 mpnn.eval()
-
+print(f"start read")
 test_path = r'data/train.parquet'
 smiles_column = 'molecule_smiles'
 df_test = pd.read_parquet(test_path)
+print(f"read done")
+print(f"drop_duplicates start")
 df_test.drop_duplicates(subset=['molecule_smiles'], inplace=True)
+print(f"drop_duplicates done")
+print(f"split start")
 several_id_lists = np.array_split(df_test.to_numpy(), 100)
+print(f"split done")
+
 
 def encode(smis):
     test_data = [data.MoleculeDatapoint.from_smi(smi) for smi in smis]
@@ -29,6 +35,7 @@ def encode(smis):
         encodings = torch.cat(encodings, 0)
     return encodings
 
+
 def replace_prot(prot_col):
     labeled = []
     for i in prot_col:
@@ -41,6 +48,7 @@ def replace_prot(prot_col):
         else:
             labeled.append(4)
     return labeled
+
 
 def to_l_space(df):
     fin_df = pd.DataFrame()
@@ -68,9 +76,11 @@ def to_l_space(df):
     print(f"saving {id_1} {id_last}")
     fin_df.to_parquet(f'data/lspace/ls_{id_1}_{id_last}.parquet')
 
+
 # for mol_list in several_id_lists:
 #     to_l_space(mol_list)
-func_out = Parallel(n_jobs=-1)(
+print(f"func start")
+func_out = Parallel(n_jobs=48)(
     [
         delayed(to_l_space)(
             mol_list
